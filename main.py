@@ -1,66 +1,91 @@
-import praw
+from collections import Counter
+import requests
+import feedparser
+import re
+import time
 from datetime import datetime, timedelta, timezone
 
-# =====================
-# CONFIG
-# =====================
-CLIENT_ID = "YOUR_CLIENT_ID"
-CLIENT_SECRET = "YOUR_CLIENT_SECRET"
-USER_AGENT = "weekly-reddit-scraper by u/YOUR_USERNAME"
+COMMENTS_PER_POST = 30
+REQUEST_DELAY = 0.5  # seconds (important)
 
-SUBREDDITS = [
-    "wallstreetbets",
-    "stocks",
-    "investing",
-    "stockmarket"
-]
+HEADERS = {
+    "User-Agent": "reddit-rss-comment-fetcher/1.0"
+}
 
-POST_LIMIT_PER_SUB = 500  # upper bound (Reddit sorting limits apply)
 
-# =====================
-# REDDIT CLIENT
-# =====================
-reddit = praw.Reddit(
-    client_id=CLIENT_ID,
-    client_secret=CLIENT_SECRET,
-    user_agent=USER_AGENT
-)
+def get_comments(inpost_id, limit):
+    url = f"https://www.reddit.com/comments/{inpost_id}.json"
+    try:
+        r = requests.get(url, headers=HEADERS, timeout=10)
+        r.raise_for_status()
+    except Exception:
+        return []
 
-# =====================
-# DATE FILTER
-# =====================
-now = datetime.now(timezone.utc)
-one_week_ago = now - timedelta(days=7)
+    data = r.json()
+    incomments = []
 
-# =====================
-# COLLECT POSTS
-# =====================
+    for child in data[1]["data"]["children"]:
+        if child["kind"] == "t1":
+            body = child["data"].get("body")
+            if body:
+                incomments.append(body)
+        if len(incomments) >= limit:
+            break
+
+    return incomments
+
+subs = ["wallstreetbets", "stocks", "valueinvesting", "daytrading", "10xpennystocks", "theraceto10million", "walllstreetbets", "smallstreetbets", "options", "shortsqueeze", "pennystock", "stockstobuytoday"]
+one_week_ago = datetime.now(timezone.utc) - timedelta(days=7)
+
+blacklist = ["OFF", "CEO", "ATM", "LLC", "IPO", "YOLO", "SEC", "WSB", "USD", "THE", "CAD"]
+
 rows = []
+ctr = Counter()
+for sub in subs:
+    print(sub)
+    feed = feedparser.parse(f"https://www.reddit.com/r/{sub}/new/.rss")
+    for entry in feed.entries:
+        sSet = set()
+        published = datetime(*entry.published_parsed[:6], tzinfo=timezone.utc)
+        if published < one_week_ago:
+            continue
 
-for subreddit_name in SUBREDDITS:
-    subreddit = reddit.subreddit(subreddit_name)
+        # Extract post ID from URL
+        match = re.search(r"/comments/([a-z0-9]+)/", entry.link)
+        if not match:
+            continue
+        post_id = match.group(1)
 
-    for post in subreddit.new(limit=POST_LIMIT_PER_SUB):
-        created = datetime.fromtimestamp(post.created_utc, tz=timezone.utc)
+        # Fetch comments
+        comments = get_comments(post_id, COMMENTS_PER_POST)
+        time.sleep(REQUEST_DELAY)
 
-        if created < one_week_ago:
-            break  # posts are sorted newest → oldest
+        #rows.append({
+        #    "subreddit": sub,
+        #    "title": entry.title,
+        #    "published": published.strftime("%m-%d-%y %H:%M"),
+        #    "summary": entry.summary
+        #})
 
-        rows.append({
-            "subreddit": subreddit_name,
-            "post_id": post.id,
-            "title": post.title,
-            "body": post.selftext,
-            "score": post.score,
-            "num_comments": post.num_comments,
-            "flair": post.link_flair_text,
-            "flair_css": post.link_flair_css_class,
-            "created_utc": created.isoformat(),
-            "url": post.url
-        })
+        result = []
+        sift = "".join(comments)
+        sift = entry.summary + sift
+        for char in sift:
+            if char.isalpha():
+                result.append(char)
+            else:
+                result.append(" ")
+        text = "".join(result)
+        text = text.split(" ")
+        #print("")
+        for word in text:
 
-print(f"Collected {len(df)} posts from last 7 days.")
-
-
-if __name__ == "__main__":
-    print("hi")
+            # word = ''.join(filter(str.isalpha, word))
+            if word.isupper() and 2 < len(word) <= 4 and word not in blacklist:
+                #print(word)
+                sSet.add(word)
+        #print(sSet)
+        rows += sSet
+ctr = Counter(rows)
+for elm in ctr.most_common(10):
+    print(elm)
