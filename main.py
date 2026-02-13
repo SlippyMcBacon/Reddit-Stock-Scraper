@@ -5,7 +5,7 @@ import re
 import time
 from datetime import datetime, timedelta, timezone
 
-COMMENTS_PER_POST = 30
+COMMENTS_PER_POST = 50
 REQUEST_DELAY = 0.5  # seconds (important)
 
 HEADERS = {
@@ -37,7 +37,7 @@ def get_comments(inpost_id, limit):
 subs = ["wallstreetbets", "stocks", "valueinvesting", "daytrading", "10xpennystocks", "theraceto10million", "walllstreetbets", "smallstreetbets", "options", "shortsqueeze", "pennystock", "stockstobuytoday"]
 one_week_ago = datetime.now(timezone.utc) - timedelta(days=7)
 
-blacklist = ["OFF", "CEO", "ATM", "LLC", "IPO", "YOLO", "SEC", "WSB", "USD", "THE", "CAD"]
+blacklist = ["OFF", "CEO", "ATM", "LLC", "IPO", "YOLO", "SEC", "WSB", "USD", "THE", "CAD", "THIS", "WILL", "HOLD", "MOON", "SEND"]
 
 rows = []
 ctr = Counter()
@@ -81,7 +81,7 @@ for sub in subs:
         for word in text:
 
             # word = ''.join(filter(str.isalpha, word))
-            if word.isupper() and 2 < len(word) <= 4 and word not in blacklist:
+            if word.isupper() and 2 < len(word) <= 5 and word not in blacklist:
                 #print(word)
                 sSet.add(word)
         #print(sSet)
