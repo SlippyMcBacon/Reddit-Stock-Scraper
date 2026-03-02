@@ -191,7 +191,6 @@ for sub in subs:
     #print(sym, count)
 
 ctr = Counter(rows)
-
 top_results = ctr.most_common(10)
 
 message_lines = []
