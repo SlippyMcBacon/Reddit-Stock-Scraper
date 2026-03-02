@@ -21,7 +21,7 @@ HEADERS = {
 session = requests.Session()
 session.headers.update(HEADERS)
 
-def send_pushover(message: str, title: str = "Reddit Stock Tracker"):
+def send_pushover(message: str, title: str = "Stock Tracker"):
     user_key = os.getenv("PUSHOVER_USER_KEY")
     api_token = os.getenv("PUSHOVER_API_TOKEN")
 
@@ -129,11 +129,11 @@ one_week_ago = datetime.now(timezone.utc) - timedelta(days=7)
 blacklist = {
     "OFF", "CEO", "ATM", "LLC", "IPO", "YOLO", "SEC", "WSB", "USD", "THE", "CAD",
     "THIS", "WILL", "HOLD", "MOON", "SEND", "LIVE", "POST", "EDIT", "LINK", "CPI",
-    "EPS", "AND", "NOT", "ETF", "SPY"
+    "EPS", "AND", "NOT", "ETF", "SPY", "USA", "FOR", "ONLY", "FOR"
 }
 
 rows = []
-
+# send_pushover("NVDA(88)|NVDA(88)|NVDA(88)|NVDA(88)|NVDA(88)|NVDA(88)|NVDA(88)|NVDA(88)|NVDA(88)|NVDA(88)")
 for sub in subs:
     print(f"== {sub} ==")
     feed_url = f"https://www.reddit.com/r/{sub}/new/.rss"
@@ -191,14 +191,13 @@ for sub in subs:
     #print(sym, count)
 
 ctr = Counter(rows)
-top_results = ctr.most_common(10)
+top_results = ctr.most_common(9)
 
 message_lines = []
 for sym, count in top_results:
-    line = f"{sym}: {count}"
-    print(line)
+    line = f"{sym}({count})"
     message_lines.append(line)
 
-notification_text = "Top Reddit Mentions (Last 7 Days)\n\n" + "\n".join(message_lines)
-
+notification_text = "" + " | ".join(message_lines)
+print(notification_text)
 send_pushover(notification_text)
