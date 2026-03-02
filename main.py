@@ -4,6 +4,7 @@ import feedparser
 import re
 import time
 import random
+import os
 from datetime import datetime, timedelta, timezone
 from typing import List
 
@@ -19,6 +20,29 @@ HEADERS = {
 # ---- Requests session with retry/backoff ----
 session = requests.Session()
 session.headers.update(HEADERS)
+
+def send_pushover(message: str, title: str = "Reddit Stock Tracker"):
+    user_key = os.getenv("PUSHOVER_USER_KEY")
+    api_token = os.getenv("PUSHOVER_API_TOKEN")
+
+    if not user_key or not api_token:
+        print("[Warn] Pushover credentials not set.")
+        return
+
+    try:
+        requests.post(
+            "https://api.pushover.net/1/messages.json",
+            data={
+                "token": api_token,
+                "user": user_key,
+                "title": title,
+                "message": message,
+            },
+            timeout=10,
+        )
+        print("[Info] Pushover notification sent.")
+    except Exception as e:
+        print(f"[Warn] Failed to send notification: {e}")
 
 def sleep_with_jitter(base=BASE_DELAY):
     time.sleep(base + random.uniform(0.0, 0.6))
@@ -162,6 +186,20 @@ for sub in subs:
         rows.extend(sSet)
 
 # ---- Results ----
+#ctr = Counter(rows)
+#for sym, count in ctr.most_common(10):
+    #print(sym, count)
+
 ctr = Counter(rows)
-for sym, count in ctr.most_common(10):
-    print(sym, count)
+
+top_results = ctr.most_common(10)
+
+message_lines = []
+for sym, count in top_results:
+    line = f"{sym}: {count}"
+    print(line)
+    message_lines.append(line)
+
+notification_text = "Top Reddit Mentions (Last 7 Days)\n\n" + "\n".join(message_lines)
+
+send_pushover(notification_text)
