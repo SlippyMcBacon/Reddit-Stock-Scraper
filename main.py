@@ -150,7 +150,7 @@ one_week_ago = datetime.now(timezone.utc) - timedelta(days=7)
 blacklist = {
     "OFF", "CEO", "ATM", "LLC", "IPO", "YOLO", "SEC", "WSB", "USD", "THE", "CAD",
     "THIS", "WILL", "HOLD", "MOON", "SEND", "LIVE", "POST", "EDIT", "LINK", "CPI",
-    "EPS", "AND", "NOT", "ETF", "SPY", "USA", "FOR", "ONLY", "FOR"
+    "EPS", "AND", "NOT", "ETF", "SPY", "USA", "FOR", "ONLY"
 }
 
 rows = []
@@ -239,7 +239,7 @@ for rank, (sym, count) in enumerate(top_results, start=1):
     print(f"{sym} {count} {indicator}")
 
 # Build notification text
-notification_text = "" + " | ".join(summary_parts)
+notification_text = "" + " |".join(summary_parts)
 
 send_pushover(notification_text)
 
