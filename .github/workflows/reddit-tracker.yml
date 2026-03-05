@@ -6,6 +6,9 @@ on:
 
   workflow_dispatch:  # allows manual run
 
+permissions:
+  contents: write
+
 jobs:
   run-script:
     runs-on: ubuntu-latest
