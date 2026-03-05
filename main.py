@@ -150,7 +150,8 @@ one_week_ago = datetime.now(timezone.utc) - timedelta(days=7)
 blacklist = {
     "OFF", "CEO", "ATM", "LLC", "IPO", "YOLO", "SEC", "WSB", "USD", "THE", "CAD",
     "THIS", "WILL", "HOLD", "MOON", "SEND", "LIVE", "POST", "EDIT", "LINK", "CPI",
-    "EPS", "AND", "NOT", "ETF", "SPY", "USA", "FOR", "ONLY"
+    "EPS", "AND", "NOT", "ETF", "SPY", "USA", "FOR", "ONLY", "NYSE", "SPX", "ABOVE",
+    "FDA", "GAAP", "AACR", "NFA"
 }
 
 rows = []
