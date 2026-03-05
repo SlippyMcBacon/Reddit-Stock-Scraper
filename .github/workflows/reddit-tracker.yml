@@ -2,10 +2,12 @@ name: Reddit Stock Tracker
 
 on:
   schedule:
-    # Runs daily at 9:00 AM Eastern (13:00 UTC)
-    - cron: "0 10 * * *"
+    - cron: "0 10 * * *" # 6am EST
 
   workflow_dispatch:  # allows manual run
+
+permissions:
+  contents: write
 
 jobs:
   run-script:
