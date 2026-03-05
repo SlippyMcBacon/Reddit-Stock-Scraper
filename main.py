@@ -1,5 +1,6 @@
 from collections import Counter
 import requests
+import json
 import feedparser
 import re
 import time
@@ -16,6 +17,26 @@ TIMEOUT = 10
 HEADERS = {
     "User-Agent": "reddit-rss-comment-fetcher/1.1 (contact: yourname@example.com)"
 }
+
+RANK_FILE = "previous_rankings.json"
+
+
+def load_previous_rankings():
+    if not os.path.exists(RANK_FILE):
+        return {}
+    try:
+        with open(RANK_FILE, "r") as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
+
+def save_current_rankings(rankings):
+    try:
+        with open(RANK_FILE, "w") as f:
+            json.dump(rankings, f)
+    except Exception as e:
+        print(f"[Warn] Failed to save rankings: {e}")
 
 # ---- Requests session with retry/backoff ----
 session = requests.Session()
@@ -133,7 +154,7 @@ blacklist = {
 }
 
 rows = []
-#send_pushover("NVDA(88)|NVDA(88)|NVDA(88)|NVDA(88)|NVDA(88)|NVDA(88)|NVDA(88)|NVDA(88)|NVDA(88)|NVDA(88)")
+send_pushover("NVDA(88)^|NVDA(88)v|NVDA(88)-|NVDA(88)*|NVDA(88)^|NVDA(88)v|NVDA(88)-|NVDA(88)*|NVDA(88)^")
 for sub in subs:
     print(f"== {sub} ==")
     feed_url = f"https://www.reddit.com/r/{sub}/new/.rss"
@@ -193,11 +214,34 @@ for sub in subs:
 ctr = Counter(rows)
 top_results = ctr.most_common(9)
 
-message_lines = []
-for sym, count in top_results:
-    line = f"{sym}({count})"
-    message_lines.append(line)
+previous_rankings = load_previous_rankings()
 
-notification_text = "" + " | ".join(message_lines)
-print(notification_text)
+current_rankings = {}
+summary_parts = []
+
+for rank, (sym, count) in enumerate(top_results, start=1):
+    current_rankings[sym] = rank
+
+    if sym not in previous_rankings:
+        indicator = "*"
+    else:
+        prev_rank = previous_rankings[sym]
+
+        if rank < prev_rank:
+            indicator = "^"
+        elif rank > prev_rank:
+            indicator = "v"
+        else:
+            indicator = "-"
+
+    summary_parts.append(f"{sym}({count}){indicator}")
+
+    print(f"{sym} {count} {indicator}")
+
+# Build notification text
+notification_text = "" + " | ".join(summary_parts)
+
 send_pushover(notification_text)
+
+# Save rankings for tomorrow
+save_current_rankings(current_rankings)
