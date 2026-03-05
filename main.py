@@ -154,7 +154,7 @@ blacklist = {
 }
 
 rows = []
-send_pushover("NVDA(88)^ |NVDA(88)v |NVDA(88)- |NVDA(88)* |NVDA(88)^ |NVDA(88)v |NVDA(88)- |NVDA(88)* |NVDA(88)^")
+#send_pushover("NVDA(88)^ |NVDA(88)v |NVDA(88)- |NVDA(88)* |NVDA(88)^ |NVDA(88)v |NVDA(88)- |NVDA(88)* |NVDA(88)^")
 for sub in subs:
     print(f"== {sub} ==")
     feed_url = f"https://www.reddit.com/r/{sub}/new/.rss"
