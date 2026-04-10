@@ -152,8 +152,8 @@ blacklist = {
     "THIS", "WILL", "HOLD", "MOON", "SEND", "LIVE", "POST", "EDIT", "LINK", "CPI",
     "EPS", "AND", "NOT", "ETF", "SPY", "USA", "FOR", "ONLY", "NYSE", "SPX", "ABOVE",
     "FDA", "GAAP", "AACR", "NFA", "NAV", "THESE", "IRA", "EPA", "ARE", "ABOVE", "COVID",
-    "QQQ", "SPX", "MACD", "IRS", "NYIAX",
-} #updated april 9th
+    "QQQ", "SPX"
+}
 
 rows = []
 #send_pushover("NVDA(88)^ |NVDA(88)v |NVDA(88)- |NVDA(88)* |NVDA(88)^ |NVDA(88)v |NVDA(88)- |NVDA(88)* |NVDA(88)^")
@@ -216,19 +216,18 @@ for sub in subs:
 ctr = Counter(rows)
 top_results = ctr.most_common(9)
 
-previous_data = load_previous_rankings()
+previous_rankings = load_previous_rankings()
 
-current_data = {}
+current_rankings = {}
 summary_parts = []
 
 for rank, (sym, count) in enumerate(top_results, start=1):
+    current_rankings[sym] = rank
 
-    prev_entry = previous_data.get(sym)
-
-    # ---- STREAK LOGIC ----
-    if prev_entry:
-        streak = prev_entry.get("streak", 1) + 1
-        prev_rank = prev_entry.get("rank")
+    if sym not in previous_rankings:
+        indicator = "*"
+    else:
+        prev_rank = previous_rankings[sym]
 
         if rank < prev_rank:
             indicator = "^"
@@ -236,24 +235,15 @@ for rank, (sym, count) in enumerate(top_results, start=1):
             indicator = "v"
         else:
             indicator = "-"
-    else:
-        streak = 1
-        indicator = "+"
 
-    current_data[sym] = {
-        "rank": rank,
-        "streak": streak
-    }
+    summary_parts.append(f"{sym}({count}){indicator}")
 
-    # 👇 Add streak BEFORE ticker
-    summary_parts.append(f"{sym}({count}){streak}")
+    print(f"{sym} {count} {indicator}")
 
-    print(f"{sym} {count} {indicator} streak={streak}")
-
-# Build notification
+# Build notification text
 notification_text = "" + " |".join(summary_parts)
 
 send_pushover(notification_text)
 
-# Save for next run
-save_current_rankings(current_data)
+# Save rankings for tomorrow
+save_current_rankings(current_rankings)
