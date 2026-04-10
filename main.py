@@ -310,5 +310,4 @@ notification_text = "" + " |".join(summary_parts)
 
 send_pushover(notification_text)
 
-# Save for next run
 save_current_rankings(current_data)
