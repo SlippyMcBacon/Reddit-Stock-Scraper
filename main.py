@@ -245,5 +245,4 @@ notification_text = "" + " |".join(summary_parts)
 
 send_pushover(notification_text)
 
-# Save rankings for tomorrow
 save_current_rankings(current_rankings)
