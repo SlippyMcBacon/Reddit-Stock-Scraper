@@ -246,12 +246,12 @@ for rank, (sym, count) in enumerate(top_results, start=1):
     }
 
     # 👇 Add streak BEFORE ticker
-    summary_parts.append(f"{streak} {sym}({count}){indicator}")
+    summary_parts.append(f"{sym}({count}){streak}")
 
     print(f"{sym} {count} {indicator} streak={streak}")
 
 # Build notification
-notification_text = " |".join(summary_parts)
+notification_text = "" + " |".join(summary_parts)
 
 send_pushover(notification_text)
 
