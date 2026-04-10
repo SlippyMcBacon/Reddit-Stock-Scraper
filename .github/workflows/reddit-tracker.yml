@@ -1,13 +1,15 @@
 name: Reddit Stock Tracker
 
-on:
-  schedule:
-    - cron: "15 9 * * *" # 6am EST
-
-  workflow_dispatch:  # allows manual run
-
 permissions:
   contents: write
+
+on:
+  schedule:
+    - cron: "0 9 * * *"
+  workflow_dispatch:
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   run-script:
@@ -17,6 +19,13 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
+      - name: Download previous rankings artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ranking-history
+          path: .
+        continue-on-error: true
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -25,15 +34,14 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Run tracker
+      - name: Run scraper
         env:
           PUSHOVER_USER_KEY: ${{ secrets.PUSHOVER_USER_KEY }}
           PUSHOVER_API_TOKEN: ${{ secrets.PUSHOVER_API_TOKEN }}
         run: python main.py
-      - name: Commit ranking history
-        run: |
-          git config --global user.name "github-actions"
-          git config --global user.email "actions@github.com"
-          git add previous_rankings.json || true
-          git commit -m "Update ranking history" || true
-          git push
+
+      - name: Upload updated rankings
+        uses: actions/upload-artifact@v4
+        with:
+          name: ranking-history
+          path: previous_rankings.json
