@@ -68,6 +68,57 @@ def send_pushover(message: str, title: str = "Stock Tracker"):
 def sleep_with_jitter(base=BASE_DELAY):
     time.sleep(base + random.uniform(0.0, 0.6))
 
+def safe_request(url, max_retries=5, base_delay=1.0):
+    for attempt in range(max_retries):
+        try:
+            response = requests.get(
+                url,
+                headers={
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+                                  "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+                    "Accept": "application/json, application/rss+xml, application/xml;q=0.9,*/*;q=0.8",
+                    "Connection": "keep-alive",
+                },
+                timeout=15,
+            )
+
+            # ✅ Success
+            if response.status_code == 200:
+                return response
+
+            # 🔁 Rate limited
+            elif response.status_code == 429:
+                wait = base_delay * (2 ** attempt) + random.uniform(0, 1)
+                print(f"[429] Rate limited. Sleeping {wait:.1f}s (attempt {attempt+1}/{max_retries})")
+                time.sleep(wait)
+
+            # 🔁 Server errors (temporary)
+            elif 500 <= response.status_code < 600:
+                wait = base_delay * (2 ** attempt) + random.uniform(0, 1)
+                print(f"[{response.status_code}] Server error. Sleeping {wait:.1f}s")
+                time.sleep(wait)
+
+            else:
+                print(f"[Error] HTTP {response.status_code} for {url}")
+                return None
+
+        except requests.exceptions.ConnectionError as e:
+            wait = base_delay * (2 ** attempt) + random.uniform(0, 1)
+            print(f"[ConnectionError] {e}. Retrying in {wait:.1f}s")
+            time.sleep(wait)
+
+        except requests.exceptions.Timeout:
+            wait = base_delay * (2 ** attempt) + random.uniform(0, 1)
+            print(f"[Timeout] Retrying in {wait:.1f}s")
+            time.sleep(wait)
+
+        except requests.exceptions.RequestException as e:
+            print(f"[Fatal Request Error] {e}")
+            return None
+
+    print(f"[Fail] Giving up on {url}")
+    return None
+
 def request_with_backoff(url: str):
     backoff = 1.0
     for attempt in range(1, MAX_RETRIES + 1):
@@ -160,7 +211,11 @@ rows = []
 for sub in subs:
     print(f"== {sub} ==")
     feed_url = f"https://www.reddit.com/r/{sub}/new/.rss"
-    feed = feedparser.parse(feed_url)
+    response = safe_request(feed_url)
+    if not response:
+        continue
+
+    feed = feedparser.parse(response.content)
 
     for entry in feed.entries:
         # Guard: published_parsed may be missing
