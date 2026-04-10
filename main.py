@@ -203,8 +203,9 @@ blacklist = {
     "THIS", "WILL", "HOLD", "MOON", "SEND", "LIVE", "POST", "EDIT", "LINK", "CPI",
     "EPS", "AND", "NOT", "ETF", "SPY", "USA", "FOR", "ONLY", "NYSE", "SPX", "ABOVE",
     "FDA", "GAAP", "AACR", "NFA", "NAV", "THESE", "IRA", "EPA", "ARE", "ABOVE", "COVID",
-    "QQQ", "SPX"
+    "QQQ", "SPX", "IRS", "API", "ROI", "TSA", "MACD", "NYIAX", "OTCQB", "OTM"
 }
+# updated April 10th
 
 rows = []
 #send_pushover("NVDA(88)^ |NVDA(88)v |NVDA(88)- |NVDA(88)* |NVDA(88)^ |NVDA(88)v |NVDA(88)- |NVDA(88)* |NVDA(88)^")
