@@ -271,18 +271,19 @@ for sub in subs:
 ctr = Counter(rows)
 top_results = ctr.most_common(9)
 
-previous_rankings = load_previous_rankings()
+previous_data = load_previous_rankings()
 
-current_rankings = {}
+current_data = {}
 summary_parts = []
 
 for rank, (sym, count) in enumerate(top_results, start=1):
-    current_rankings[sym] = rank
 
-    if sym not in previous_rankings:
-        indicator = "*"
-    else:
-        prev_rank = previous_rankings[sym]
+    prev_entry = previous_data.get(sym)
+
+    # ---- STREAK LOGIC ----
+    if prev_entry:
+        streak = prev_entry.get("streak", 1) + 1
+        prev_rank = prev_entry.get("rank")
 
         if rank < prev_rank:
             indicator = "^"
@@ -290,14 +291,24 @@ for rank, (sym, count) in enumerate(top_results, start=1):
             indicator = "v"
         else:
             indicator = "-"
+    else:
+        streak = 1
+        indicator = "+"
 
-    summary_parts.append(f"{sym}({count}){indicator}")
+    current_data[sym] = {
+        "rank": rank,
+        "streak": streak
+    }
 
-    print(f"{sym} {count} {indicator}")
+    # 👇 Add streak BEFORE ticker
+    summary_parts.append(f"{sym}({count}){streak}")
 
-# Build notification text
+    print(f"{sym} {count} {indicator} streak={streak}")
+
+# Build notification
 notification_text = "" + " |".join(summary_parts)
 
 send_pushover(notification_text)
 
-save_current_rankings(current_rankings)
+# Save for next run
+save_current_rankings(current_data)
