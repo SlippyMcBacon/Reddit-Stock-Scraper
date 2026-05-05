@@ -203,7 +203,7 @@ blacklist = {
     "THIS", "WILL", "HOLD", "MOON", "SEND", "LIVE", "POST", "EDIT", "LINK", "CPI",
     "EPS", "AND", "NOT", "ETF", "SPY", "USA", "FOR", "ONLY", "NYSE", "SPX", "ABOVE",
     "FDA", "GAAP", "AACR", "NFA", "NAV", "THESE", "IRA", "EPA", "ARE", "ABOVE", "COVID",
-    "QQQ", "SPX", "IRS", "API", "ROI", "TSA", "MACD", "NYIAX", "OTCQB", "OTM"
+    "QQQ", "SPX", "IRS", "API", "ROI", "TSA", "MACD", "NYIAX", "OTCQB", "OTM", "NVDA"
 }
 # updated April 10th
 
@@ -276,6 +276,7 @@ previous_data = load_previous_rankings()
 
 current_data = {}
 summary_parts = []
+streakCheck = 0
 
 for rank, (sym, count) in enumerate(top_results, start=1):
 
@@ -302,13 +303,15 @@ for rank, (sym, count) in enumerate(top_results, start=1):
     }
 
     # 👇 Add streak BEFORE ticker
+    if streak > 2:
+        streakCheck += 1
     summary_parts.append(f"{sym}({count}){streak}")
 
     print(f"{sym} {count} {indicator} streak={streak}")
 
 # Build notification
-notification_text = "" + " |".join(summary_parts)
-
-send_pushover(notification_text)
+if streakCheck > 0:
+    notification_text = "" + " |".join(summary_parts)
+    send_pushover(notification_text)
 
 save_current_rankings(current_data)
